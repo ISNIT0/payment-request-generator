@@ -1,0 +1,18 @@
+{
+  "name": "payment-request-demos",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "highlightjs": "^9.10.0",
+    "nimble": "git+https://github.com/ISNIT0/nimble-js.git"
+  },
+  "devDependencies": {
+    "@types/es6-shim": "^0.31.37"
+  }
+}
