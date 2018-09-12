@@ -40,7 +40,7 @@ var affect = nimble_1.makeRenderLoop(target, {
             shippingOptions: []
         },
         methods: {
-            'basic-card': {}
+            'card': true
         },
         options: {
             requestShipping: false,
@@ -162,29 +162,34 @@ var affect = nimble_1.makeRenderLoop(target, {
                 nimble_1.h('div.center', [
                     nimble_1.h('button.purple.big', {
                         onclick: function () {
-                            var request = new PaymentRequest(parsePaymentMethods(state.paymentOptions.methods), state.paymentOptions.paymentDetails, state.paymentOptions.options);
-                            request.addEventListener('shippingoptionchange', function (event) {
-                                var prInstance = event.target;
-                                var selectedId = prInstance.shippingOption;
-                                // Step 3: Mark selected option
-                                var updatedShippingOptions = state.paymentOptions.paymentDetails.shippingOptions.map(function (option) {
-                                    return Object.assign({}, option, { selected: option.id === selectedId });
+                            try {
+                                var request = new PaymentRequest(parsePaymentMethods(state.paymentOptions.methods), state.paymentOptions.paymentDetails, state.paymentOptions.options);
+                                request.addEventListener('shippingoptionchange', function (event) {
+                                    var prInstance = event.target;
+                                    var selectedId = prInstance.shippingOption;
+                                    // Step 3: Mark selected option
+                                    var updatedShippingOptions = state.paymentOptions.paymentDetails.shippingOptions.map(function (option) {
+                                        return Object.assign({}, option, { selected: option.id === selectedId });
+                                    });
+                                    var selectedShippingOption = updatedShippingOptions.find(function (o) { return o.selected; });
+                                    // TODO: Update total and display items, including pending states.
+                                    var newTotal = Object.assign({}, state.paymentOptions.paymentDetails.total);
+                                    newTotal.amount.value += selectedShippingOption.amount.value;
+                                    event.updateWith({
+                                        total: newTotal,
+                                        shippingOptions: updatedShippingOptions,
+                                    });
                                 });
-                                var selectedShippingOption = updatedShippingOptions.find(function (o) { return o.selected; });
-                                // TODO: Update total and display items, including pending states.
-                                var newTotal = Object.assign({}, state.paymentOptions.paymentDetails.total);
-                                newTotal.amount.value += selectedShippingOption.amount.value;
-                                event.updateWith({
-                                    total: newTotal,
-                                    shippingOptions: updatedShippingOptions,
-                                });
-                            });
-                            request.show()
-                                .then(function (paymentResponse) {
-                                affect.set('runResult.success', JSON.stringify(paymentResponse, null, '\t'));
-                                paymentResponse.complete();
-                            })
-                                .catch(function (err) { return affect.set('runResult.error', err); });
+                                request.show()
+                                    .then(function (paymentResponse) {
+                                    affect.set('runResult.success', JSON.stringify(paymentResponse, null, '\t'));
+                                    paymentResponse.complete();
+                                })
+                                    .catch(function (err) { return affect.set('runResult.error', err); });
+                            }
+                            catch (err) {
+                                affect.set('runResult.error', err);
+                            }
                         }
                     }, 'TEST')
                 ]),
@@ -235,7 +240,7 @@ function parsePaymentMethods(methods) {
 }
 function makeCodePreview(settings) {
     var shippingOptionChangeHandler = settings.options.requestShipping ? "\n\nrequest.addEventListener('shippingoptionchange', (event) => {\n    const prInstance = event.target;\n\n    const selectedId = prInstance.shippingOption;\n\n    const updatedShippingOptions = paymentDetails.shippingOptions.map((option) => {\n        return Object.assign({}, option, { selected: option.id === selectedId });\n    });\n\n    const selectedShippingOption = updatedShippingOptions.find(o => o.selected);\n\n    // Update total and display items, including pending states.\n    const newTotal = Object.assign({}, paymentDetails.total);\n    newTotal.amount.value += selectedShippingOption.amount.value;\n    event.updateWith({\n        total: newTotal,\n        shippingOptions: updatedShippingOptions,\n    });\n});\n\n" : '';
-    return "\nconst supportedPaymentMethods = [\n    {\n        supportedMethods: 'basic-card',\n    }\n];\n\nconst paymentDetails = " + JSON.stringify(settings.paymentDetails, null, '    ') + ";\n\n// Options isn't required.\nconst options = " + JSON.stringify(settings.options, null, '    ') + ";\n\nconst request = new PaymentRequest(\n    supportedPaymentMethods,\n    paymentDetails,\n    options\n);\n" + shippingOptionChangeHandler + "\n// Call when you wish to show the UI to the user.\nrequest.show()\n    .then((paymentResponse) => {\n        console.info(paymentResponse);\n        // TODO: Process payment (stripe/mastercard/etc.)\n        paymentResponse.complete();\n    })\n    .catch((err) => {\n        console.error(err);\n    });\n";
+    return "\nconst supportedPaymentMethods = " + JSON.stringify(parsePaymentMethods(settings.methods), null, '    ') + ";\n\nconst paymentDetails = " + JSON.stringify(settings.paymentDetails, null, '    ') + ";\n\n// Options isn't required.\nconst options = " + JSON.stringify(settings.options, null, '    ') + ";\n\nconst request = new PaymentRequest(\n    supportedPaymentMethods,\n    paymentDetails,\n    options\n);\n" + shippingOptionChangeHandler + "\n// Call when you wish to show the UI to the user.\nrequest.show()\n    .then((paymentResponse) => {\n        console.info(paymentResponse);\n        // TODO: Process payment (stripe/mastercard/etc.)\n        paymentResponse.complete();\n    })\n    .catch((err) => {\n        console.error(err);\n    });\n";
 }
 function makeInput(state, affect, keypath, type, placeholder, options) {
     if (options === void 0) { options = {}; }

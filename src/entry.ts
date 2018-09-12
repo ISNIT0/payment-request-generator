@@ -23,7 +23,7 @@ const affect = makeRenderLoop(target, {
             shippingOptions: []
         },
         methods: {
-            'basic-card': {}
+            'card': true
         },
         options: {
             requestShipping: false,
@@ -151,39 +151,43 @@ const affect = makeRenderLoop(target, {
                     h('div.center', [
                         h('button.purple.big', {
                             onclick() {
-                                const request = new PaymentRequest(
-                                    parsePaymentMethods(state.paymentOptions.methods),
-                                    <any>state.paymentOptions.paymentDetails,
-                                    state.paymentOptions.options
-                                );
+                                try {
+                                    const request = new PaymentRequest(
+                                        parsePaymentMethods(state.paymentOptions.methods),
+                                        <any>state.paymentOptions.paymentDetails,
+                                        state.paymentOptions.options
+                                    );
 
-                                request.addEventListener('shippingoptionchange', (event: any) => {
-                                    const prInstance: any = event.target;
+                                    request.addEventListener('shippingoptionchange', (event: any) => {
+                                        const prInstance: any = event.target;
 
-                                    const selectedId = prInstance.shippingOption;
+                                        const selectedId = prInstance.shippingOption;
 
-                                    // Step 3: Mark selected option
-                                    const updatedShippingOptions = state.paymentOptions.paymentDetails.shippingOptions.map((option: any) => {
-                                        return Object.assign({}, option, { selected: option.id === selectedId });
+                                        // Step 3: Mark selected option
+                                        const updatedShippingOptions = state.paymentOptions.paymentDetails.shippingOptions.map((option: any) => {
+                                            return Object.assign({}, option, { selected: option.id === selectedId });
+                                        });
+
+                                        const selectedShippingOption = updatedShippingOptions.find(o => o.selected);
+
+                                        // TODO: Update total and display items, including pending states.
+                                        const newTotal = Object.assign({}, state.paymentOptions.paymentDetails.total);
+                                        newTotal.amount.value += selectedShippingOption.amount.value;
+                                        event.updateWith({
+                                            total: newTotal,
+                                            shippingOptions: updatedShippingOptions,
+                                        });
                                     });
 
-                                    const selectedShippingOption = updatedShippingOptions.find(o => o.selected);
-
-                                    // TODO: Update total and display items, including pending states.
-                                    const newTotal = Object.assign({}, state.paymentOptions.paymentDetails.total);
-                                    newTotal.amount.value += selectedShippingOption.amount.value;
-                                    event.updateWith({
-                                        total: newTotal,
-                                        shippingOptions: updatedShippingOptions,
-                                    });
-                                });
-
-                                request.show()
-                                    .then((paymentResponse: PaymentResponse) => {
-                                        affect.set('runResult.success', JSON.stringify(paymentResponse, null, '\t'));
-                                        paymentResponse.complete();
-                                    })
-                                    .catch((err: any) => affect.set('runResult.error', err));
+                                    request.show()
+                                        .then((paymentResponse: PaymentResponse) => {
+                                            affect.set('runResult.success', JSON.stringify(paymentResponse, null, '\t'));
+                                            paymentResponse.complete();
+                                        })
+                                        .catch((err: any) => affect.set('runResult.error', err));
+                                } catch (err) {
+                                    affect.set('runResult.error', err);
+                                }
                             }
                         }, 'TEST')
                     ]),
@@ -260,11 +264,7 @@ request.addEventListener('shippingoptionchange', (event) => {
 
 ` : '';
     return `
-const supportedPaymentMethods = [
-    {
-        supportedMethods: 'basic-card',
-    }
-];
+const supportedPaymentMethods = ${JSON.stringify(parsePaymentMethods(settings.methods), null, '    ')};
 
 const paymentDetails = ${JSON.stringify(settings.paymentDetails, null, '    ')};
 
