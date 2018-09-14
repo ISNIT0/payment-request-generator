@@ -135,7 +135,7 @@ const affect = makeRenderLoop(target, {
                                                     },
                                                 });
                                             }
-                                        }, 'add item'),
+                                        }, 'add delivery option'),
                                         shippingOptions.length ? h('button.red', {
                                             onclick() {
                                                 affect.delete(`paymentOptions.paymentDetails.shippingOptions.${shippingOptions.length - 1}`);
