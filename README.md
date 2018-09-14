@@ -15,6 +15,9 @@ A UI for generating PaymentRequest code (https://paymentrequest.simmsreeve.com/)
 > ./watch.sh
 ```
 
+## See also
+- [WebAudio Generator](https://webaudio.simmsreeve.com)
+
 ## Useful Links
 - https://developers.google.com/web/fundamentals/payments/
 - https://developer.mozilla.org/en-US/docs/Web/API/Payment_Request_API
