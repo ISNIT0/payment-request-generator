@@ -1,6 +1,8 @@
 # PaymentRequest Generator
 A UI for generating PaymentRequest code (https://paymentrequest.simmsreeve.com/)
 
+[![CodeFactor](https://www.codefactor.io/repository/github/isnit0/payment-request-generator/badge)](https://www.codefactor.io/repository/github/isnit0/payment-request-generator)
+
 ![A screenshot of PaymentRequest Generator](./screenshot.png "PaymentRequest Generator in Action")
 
 ## Future (See GH Issues)
